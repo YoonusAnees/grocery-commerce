@@ -1,4 +1,6 @@
 import express from "express";
+import { errorHandler } from "./middlewares/errorHandler.mjs";
+import authRoutes from "./routes/auth.routes.mjs"
 
 const app = express();
 
@@ -13,29 +15,8 @@ app.get("/health", (req, res) => {
 
 // Feature routes will go here.
 
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: "Route not found",
-    });
-});
+app.use("/api/auth", authRoutes);
+app.use(errorHandler);
 
-app.use((error, req, res, next) => {
-    if (res.headersSent) {
-        return next(error);
-    }
-
-    const status = error.status || 500;
-
-    if (status >= 500) {
-        console.error(error);
-    }
-
-    res.status(status).json({
-        success: false,
-        message:
-            status >= 500 ? "Internal server error" : error.message,
-    });
-});
 
 export default app;

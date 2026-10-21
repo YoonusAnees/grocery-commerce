@@ -7,9 +7,12 @@ async function startServer() {
         await connectDatabase();
 
         const port = Number(process.env.PORT || 5000);
+        const host = "0.0.0.0";
 
-        const server = app.listen(port, () => {
+        const server = app.listen(port, host, () => {
             console.log(`Server running at http://localhost:${port}`);
+            console.log(`Local network access: http://YOUR_LOCAL_IP:${port}`);
+
         });
 
         server.on("error", (error) => {
