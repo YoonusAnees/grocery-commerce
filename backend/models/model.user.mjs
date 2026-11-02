@@ -27,6 +27,12 @@ const userSchema = new mongoose.Schema({
         ],
         default: "customer"
     },
+    phone: {
+        type: String,
+        trim: true,
+        maxLength: 25,
+        default: "",
+    },
 
 }, { timestamps: true });
 
