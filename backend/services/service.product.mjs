@@ -1,4 +1,4 @@
-import { createProductSchema, listProductsSchema, updateSchema } from "../validations/validation.product.mjs";
+import { createProductSchema, listProductsSchema, updateSchema, adminListProductsSchema } from "../validations/validation.product.mjs";
 import { Product } from "../models/model.product.mjs";
 import { AppError } from "../utils/AppError.mjs";
 import { Category } from "../models/model.category.mjs";
@@ -17,6 +17,100 @@ function validate(schema, data) {
     }
     return result.data;
 }
+
+
+async function listProducts(options, baseFilter) {
+    const {
+        page,
+        limit,
+        search,
+        category,
+        inStock,
+        sort,
+    } = options;
+
+    const filter = { ...baseFilter };
+
+    if (search) {
+        filter.name = {
+            $regex: escapeRegex(search),
+            $options: "i",
+        };
+    }
+
+    if (category) {
+        filter.category = category;
+    }
+
+    if (inStock === "true") {
+        filter.stock = { $gt: 0 };
+    } else if (inStock === "false") {
+        filter.stock = 0;
+    }
+
+    const sortOptions = {
+        newest: { createdAt: -1, _id: -1 },
+        priceAsc: { priceMinor: 1, _id: 1 },
+        priceDesc: { priceMinor: -1, _id: 1 },
+        name: { name: 1, _id: 1 },
+    };
+
+    const [products, total] = await Promise.all([
+        Product.find(filter)
+            .sort(sortOptions[sort])
+            .skip((page - 1) * limit)
+            .limit(limit),
+
+        Product.countDocuments(filter),
+    ]);
+
+    return {
+        items: products.map(toProductResponse),
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
+}
+
+
+function toProductResponse(product) {
+    return {
+        id: product._id.toString(),
+        name: product.name,
+        description: product.description,
+        category: product.category,
+        price: product.priceMinor,
+        currency: product.currency,
+        stock: product.stock,
+        isActive: product.isActive,
+        image: {
+            publicId: product.image.publicId,
+            url: product.image.url
+        },
+        createdAt: product.createdAt.toISOString(),
+        updatedAt: product.updatedAt.toISOString()
+    };
+}
+
+
+function validateProductId(id) {
+    if (typeof id !== "string" || !mongoose.isObjectIdOrHexString(id)) {
+        throw new AppError(
+            "Invalid product ID",
+            400,
+            "VALIDATOIN_ERROR"
+        );
+    }
+}
+
+function escapeRegex(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+
 
 
 export async function createProduct(data) {
@@ -58,91 +152,43 @@ export async function createProduct(data) {
 
 
 export async function getProducts(query) {
-    const { page, limit, search, category, inStock, sort } = validate(listProductsSchema, query);
+    const options = validate(listProductsSchema, query);
 
-    const filter = { isActive: true };
+    return listProducts(options, { isActive: true });
+}
 
-    if (search) {
-        filter.name = {
-            $regex: escapeRegex(search),
-            $options: "i",
-        }
-    }
-
-    if (category) {
-        filter.category = category;
-    }
-
-    if (inStock === "true") {
-        filter.stock = { $gt: 0 };
-    }
-    else if (inStock === "false") {
-        filter.stock = 0;
-    }
-
-    const sortOptions = {
-        newest: { createdAt: -1, _id: -1 },
-        priceAsc: { priceMinor: 1, _id: 1 },
-        priceDesc: { priceMinor: -1, _id: 1 },
-        name: { name: 1, _id: 1 },
-    };
-
-    const [products, total] = await Promise.all(
-        [Product.fine()
-            .sort(sortOptions[sort])
-            .skip((page - 1) * limit)
-            .limit(limit),
-
-        Product.countDocuments(filter),
-
-        ]
+export async function getAdminProducts(query) {
+    const { status, ...options } = validate(
+        adminListProductsSchema,
+        query,
     );
 
-    return {
-        items: products.map(toProductResponse),
-        pagination: {
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit)
-        },
-    };
+    const filter = {};
 
+    if (status === "active") {
+        filter.isActive = true;
+    } else if (status === "inactive") {
+        filter.isActive = false;
+    }
+
+    return listProducts(options, filter);
 }
 
 
-function toProductResponse(product) {
-    return {
-        id: product._id.toString(),
-        name: product.name,
-        description: product.description,
-        category: product.category,
-        price: product.priceMinor,
-        currency: product.currency,
-        stock: product.stock,
-        isActive: product.isActive,
-        image: {
-            publicId: product.image.publicId,
-            url: product.image.url
-        },
-        createdAt: product.createdAt.toISOString(),
-        updatedAt: product.updatedAt.toISOString()
-    };
-}
+export async function getAdminProductById(id) {
+    validateProductId(id);
 
+    const product = await Product.findById(id);
 
-function validateProductId(id) {
-    if (typeof id !== "string" || !mongoose.isObjectIdOrHexString(id)) {
+    if (!product) {
         throw new AppError(
-            "Invalid product ID",
-            400,
-            "VALIDATOIN_ERROR"
+            "Product not found",
+            404,
+            "PRODUCT_NOT_FOUND",
         );
     }
-}
 
-function escapeRegex(value) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return toProductResponse(product);
 }
 
 

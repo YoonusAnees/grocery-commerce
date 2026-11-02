@@ -73,4 +73,9 @@ export const updateSchema = createProductSchema.omit({
 
     .strict().refine((data) => Object.values(data).some((value) => value !== undefined),
         "Provide at least one filed to update"
-    )
+    );
+
+
+export const adminListProductsSchema = listProductsSchema.extend({
+    status: z.enum(["all", "active", "inactive"]).default("all"),
+});

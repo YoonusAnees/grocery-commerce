@@ -1,13 +1,49 @@
 import { Router } from "express";
-import { createProducts, getAllProducts, updateProduct, deleteProduct } from "../controllers/controller.product.mjs";
+
+import {
+    create,
+    getAll,
+    getOne,
+    update,
+    getAllAdmin,
+    getOneAdmin,
+} from "../controllers/controller.product.mjs";
+
 import { protect } from "../middlewares/middleware.mjs";
 import { authorize } from "../middlewares/authorize.mjs";
 
 const router = Router();
 
-router.post("/", protect, authorize("admin"), createProducts);
-router.get("/", getAllProducts);
-router.patch("/:id", protect, authorize("admin"), updateProduct);
-router.delete("/:id", protect, authorize("admin"), deleteProduct);
+// Register specific admin paths before "/:id".
+router.get(
+    "/admin",
+    protect,
+    authorize("admin"),
+    getAllAdmin,
+);
+
+router.get(
+    "/admin/:id",
+    protect,
+    authorize("admin"),
+    getOneAdmin,
+);
+
+router.get("/", getAll);
+router.get("/:id", getOne);
+
+router.post(
+    "/",
+    protect,
+    authorize("admin"),
+    create,
+);
+
+router.patch(
+    "/:id",
+    protect,
+    authorize("admin"),
+    update,
+);
 
 export default router;

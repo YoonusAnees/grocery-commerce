@@ -1,7 +1,7 @@
 import { success } from "zod";
-import { createProduct, getProducts } from "../services/service.product.mjs";
+import { createProduct, getProducts, getAdminProducts, getAdminProductById, getProductById } from "../services/service.product.mjs";
 
-export async function createProducts(req, res, next) {
+export async function create(req, res, next) {
     try {
         const product = await createProduct(req.body);
 
@@ -16,7 +16,7 @@ export async function createProducts(req, res, next) {
 }
 
 
-export async function getAllProducts(req, res, next) {
+export async function getAll(req, res, next) {
     try {
         const products = await getProducts(req.query);
 
@@ -45,7 +45,7 @@ export async function getOne(req, res, next) {
 }
 
 
-export async function updateProduct(req, res, next) {
+export async function update(req, res, next) {
     try {
         const product = await updateProduct(req.params.id, req.body);
 
@@ -73,3 +73,30 @@ export async function deleteProduct(req, res, next) {
         return next(error);
     }
 }
+
+export async function getAllAdmin(req, res, next) {
+    try {
+        const data = await getAdminProducts(req.query);
+
+        return res.status(200).json({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export async function getOneAdmin(req, res, next) {
+    try {
+        const product = await getAdminProductById(req.params.id);
+
+        return res.status(200).json({
+            success: true,
+            data: product,
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
