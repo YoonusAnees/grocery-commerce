@@ -1,8 +1,9 @@
-import { createProductSchema, listProductsSchema } from "../validations/validation.product.mjs";
+import { createProductSchema, listProductsSchema, updateSchema } from "../validations/validation.product.mjs";
 import { Product } from "../models/model.product.mjs";
 import { AppError } from "../utils/AppError.mjs";
 import { Category } from "../models/model.category.mjs";
-import { create } from "../controllers/controller.category.mjs";
+import { verifyProductImage } from "../utils/helper.mjs";
+import mongoose from "mongoose";
 
 
 function validate(schema, data) {
@@ -29,40 +30,12 @@ export async function createProduct(data) {
             "CATEGORY_NOT_FOUND",
         );
     }
-
-    let uploadedimage;
-
-    try {
-
-        uploadedimage = await cloudinary.api.resource(
-            validData.imagePublicId,
-            {
-                resource_type: "image",
-                type: "upload"
-            },
-        );
-
-    } catch (error) {
-        if (error.http_code === 404 || error.error?.http_code === 404) {
-            throw new AppError(
-                "Uploaded image not found",
-                400,
-                "IMAGE_NOT_FOUND"
-            );
-        }
-
-        throw new AppError(
-            "Could not verify the image. please try again",
-            502,
-            "IMAGE_VERIFY_FAILED"
-        );
-
-    }
+    const uploadedImage = await verifyProductImage(validData.imagePublicId);
 
     const allowedType = ["jpeg", "png", "webp", "jpeg"];
 
-    if (!allowedType.includes(uploadedimage.format) || typeof uploadedimage.secure_url !== "string"
-        || !uploadedimage.secure_url.startsWith("https://")) {
+    if (!allowedType.includes(uploadedImage.format) || typeof uploadedImage.secure_url !== "string"
+        || !uploadedImage.secure_url.startsWith("https://")) {
         throw new AppError(
             "The uploaded image is not supported",
             400,
@@ -77,10 +50,7 @@ export async function createProduct(data) {
         priceMinor: validData.priceMinor,
         currency: validData.currency,
         stock: validData.stock,
-        image: {
-            publicId: validData.imagePublicId,
-            url: uploadedimage.secure_url
-        }
+        uploadedImage,
     });
 
     return toProductResponse(product);
@@ -88,15 +58,42 @@ export async function createProduct(data) {
 
 
 export async function getProducts(query) {
-    const { page, limit } = validate(listProductsSchema, query);
+    const { page, limit, search, category, inStock, sort } = validate(listProductsSchema, query);
+
+    const filter = { isActive: true };
+
+    if (search) {
+        filter.name = {
+            $regex: escapeRegex(search),
+            $options: "i",
+        }
+    }
+
+    if (category) {
+        filter.category = category;
+    }
+
+    if (inStock === "true") {
+        filter.stock = { $gt: 0 };
+    }
+    else if (inStock === "false") {
+        filter.stock = 0;
+    }
+
+    const sortOptions = {
+        newest: { createdAt: -1, _id: -1 },
+        priceAsc: { priceMinor: 1, _id: 1 },
+        priceDesc: { priceMinor: -1, _id: 1 },
+        name: { name: 1, _id: 1 },
+    };
 
     const [products, total] = await Promise.all(
         [Product.fine()
-            .sort({ createdAt: -1, _id: -1 })
+            .sort(sortOptions[sort])
             .skip((page - 1) * limit)
             .limit(limit),
 
-        Product.countDocuments(),
+        Product.countDocuments(filter),
 
         ]
     );
@@ -123,6 +120,7 @@ function toProductResponse(product) {
         price: product.priceMinor,
         currency: product.currency,
         stock: product.stock,
+        isActive: product.isActive,
         image: {
             publicId: product.image.publicId,
             url: product.image.url
@@ -130,4 +128,112 @@ function toProductResponse(product) {
         createdAt: product.createdAt.toISOString(),
         updatedAt: product.updatedAt.toISOString()
     };
+}
+
+
+function validateProductId(id) {
+    if (typeof id !== "string" || !mongoose.isObjectIdOrHexString(id)) {
+        throw new AppError(
+            "Invalid product ID",
+            400,
+            "VALIDATOIN_ERROR"
+        );
+    }
+}
+
+function escapeRegex(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+
+export async function getProductById(id) {
+    validateProductId(id);
+
+    const product = await Product.findOne({
+        _id: id,
+        idActive: true,
+    });
+
+    if (!product) {
+        throw new AppError(
+            "Product not found",
+            404,
+            "PRODUCT_NOT_FOUND"
+        )
+    }
+
+    return toProductResponse(product);
+
+
+}
+
+export async function updateProduct(id, data) {
+    validateProductId(id);
+
+    const validDate = validate(updateSchema, data);
+
+    const productExist = await Product.exists({ _id: id });
+
+    if (!productExist) {
+        throw new AppError(
+            "Product not found",
+            404,
+            "Product_NOT_FOUND"
+        )
+    }
+
+    if (!validDate.category !== undefined) {
+        const categoryExist = await Category.exists({
+            _id: validDate.category,
+        })
+
+        if (!categoryExist) {
+            throw new AppError(
+                "Category not found",
+                404,
+                "CATEGORY_NOT_FOUND"
+            );
+        }
+    }
+
+    const updates = {};
+
+    for (const field of [
+        "name",
+        "description",
+        "category",
+        "priceMinor",
+        "isActive"
+    ]) {
+        if (validDate[field] !== undefined) {
+            updates[field] = validDate[field]
+        }
+    }
+
+    if (validDate.imagePublicId !== undefined) {
+        updates.image = await verifyProductImage(
+            validDate.imagePublicId,
+        );
+    }
+
+    const product = await Product.findByIdAndUpdate(
+        id,
+        { $set: updates },
+        {
+            new: true,
+            runValidators: true,
+        },
+    );
+
+    if (!product) {
+        AppError(
+            "Product Not Found",
+            404,
+            "PRODUCT_NOT_FOUND"
+
+        );
+    }
+
+    return toProductResponse(product)
+
 }

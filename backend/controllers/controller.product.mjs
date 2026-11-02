@@ -1,3 +1,4 @@
+import { success } from "zod";
 import { createProduct, getProducts } from "../services/service.product.mjs";
 
 export async function createProducts(req, res, next) {
@@ -24,6 +25,20 @@ export async function getAllProducts(req, res, next) {
             message: "Products fetched successfully",
             data: products,
         });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export async function getOne(req, res, next) {
+    try {
+
+        const product = await getProductById(req.params.id);
+        return res.status(200).json({
+            success: true,
+            data: product
+        });
+
     } catch (error) {
         return next(error);
     }

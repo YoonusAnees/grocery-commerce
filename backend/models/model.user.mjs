@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { maxLength } from "zod";
 
 const userSchema = new mongoose.Schema({
     username: {
@@ -25,7 +26,8 @@ const userSchema = new mongoose.Schema({
             "customer", "admin"
         ],
         default: "customer"
-    }
+    },
+
 }, { timestamps: true });
 
 export const User = mongoose.model("User", userSchema);

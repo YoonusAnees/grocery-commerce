@@ -43,11 +43,34 @@ export const createProductSchema = z.object({
             "Invalid image public ID"
         ),
 
-
 }).strict();
 
 
 export const listProductsSchema = z.object({
     page: z.coerce.number().int().min(1).max(10000).default(1),
     limit: z.coerce.number().int().min(1).max(50).default(12),
+    search: z.string().trim().max(100).optional(),
+    category: z.string().refine(
+        (value) => mongoose.isObjectIdOrHexString(value),
+        "Invalid category ID",
+    ).optional(),
+
+    inStock: z.enum(["true", "false"]).optional(),
+
+    sort: z
+        .enum(["newest", "priceAsc", "priceDesc", "name"])
+        .default("newest"),
 }).strict();
+
+
+export const updateSchema = createProductSchema.omit({
+    stock: true,
+    currency: true
+}).partial().
+    extend({
+        isActive: z.boolean().optional(),
+    })
+
+    .strict().refine((data) => Object.values(data).some((value) => value !== undefined),
+        "Provide at least one filed to update"
+    )
