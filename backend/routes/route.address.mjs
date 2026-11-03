@@ -1,6 +1,7 @@
-import { Router } from "Exporess"
-import { create, getAll, update, deleteAddress } from "../controllers/controller.address.mjs"
+import { Router } from "express";
+import { create, getAll, update, remove } from "../controllers/controller.address.mjs";
 import { protect } from "../middlewares/middleware.mjs";
+
 const router = Router();
 
 router.use(protect);
@@ -13,6 +14,6 @@ router.use((req, res, next) => {
 router.get("/", getAll);
 router.post("/", create);
 router.put("/:id", update);
-router.delete("/:id", deleteAddress);
+router.delete("/:id", remove);
 
 export default router;

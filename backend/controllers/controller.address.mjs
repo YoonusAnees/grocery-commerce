@@ -1,30 +1,26 @@
-import { createAddress, getAddresses, updateAddress, deleteAddress } from "../services/service.address.mjs"
+import { createAddress, getAddresses, updateAddress, deleteAddress } from "../services/service.address.mjs";
 
 export async function create(req, res, next) {
     try {
-
         const address = await createAddress(req.user.id, req.body);
         return res.status(201).json({
             success: true,
-            message: "Address created Successfully",
+            message: "Address created successfully",
             data: address,
-        })
-
+        });
     } catch (error) {
         return next(error);
     }
 }
 
-
 export async function getAll(req, res, next) {
     try {
-        const addressess = await getAddresses(req.user.id);
+        const addresses = await getAddresses(req.user.id);
         return res.status(200).json({
             success: true,
-            message: "Featched All ",
-            data: addressess,
-        })
-
+            message: "Fetched all addresses",
+            data: addresses,
+        });
     } catch (error) {
         return next(error);
     }
@@ -35,25 +31,22 @@ export async function update(req, res, next) {
         const address = await updateAddress(req.user.id, req.params.id, req.body);
         return res.status(200).json({
             success: true,
-            message: "Address updated successfully ",
+            message: "Address updated successfully",
             data: address,
-        })
-
+        });
     } catch (error) {
         return next(error);
     }
 }
 
-export async function deleteAddress(req, res, next) {
+export async function remove(req, res, next) {
     try {
-
         const address = await deleteAddress(req.user.id, req.params.id);
         return res.status(200).json({
             success: true,
-            message: "Address Deleetd successfully ",
-            data
-        })
-
+            message: "Address deleted successfully",
+            data: address,
+        });
     } catch (error) {
         return next(error);
     }
