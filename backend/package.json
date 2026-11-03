@@ -5,8 +5,10 @@
   "main": "server.mjs",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+    "start": "node server.mjs",
+    "dev": "nodemon server.mjs",
+    "check": "node --check server.mjs app.mjs",
+    "test": "node --check server.mjs app.mjs"
   },
   "keywords": [],
   "author": "",

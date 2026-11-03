@@ -1,0 +1,81 @@
+name: CD - Continuous Deployment
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Deploy target"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - backend
+          - frontend
+      environment:
+        description: "Deployment environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+
+concurrency:
+  group: cd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend API
+    if: github.event_name == 'push' || github.event.inputs.target == 'all' || github.event.inputs.target == 'backend'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Trigger Backend Deployment via Deploy Hook
+        env:
+          BACKEND_DEPLOY_HOOK: ${{ secrets.BACKEND_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$BACKEND_DEPLOY_HOOK" ]; then
+            echo "Triggering backend deployment webhook..."
+            response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BACKEND_DEPLOY_HOOK")
+            if [ "$response" -ge 200 ] && [ "$response" -lt 300 ]; then
+              echo "Backend deployment triggered successfully (HTTP $response)."
+            else
+              echo "Error: Backend deployment hook returned HTTP $response"
+              exit 1
+            fi
+          else
+            echo "::notice ::BACKEND_DEPLOY_HOOK secret is not set. Add your Render, Railway, or hosting provider deploy hook in GitHub Repository Secrets to automate backend deployments."
+          fi
+
+  deploy-frontend:
+    name: Deploy Frontend App
+    if: github.event_name == 'push' || github.event.inputs.target == 'all' || github.event.inputs.target == 'frontend'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Trigger Frontend Deployment via Deploy Hook
+        env:
+          FRONTEND_DEPLOY_HOOK: ${{ secrets.FRONTEND_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$FRONTEND_DEPLOY_HOOK" ]; then
+            echo "Triggering frontend deployment webhook..."
+            response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$FRONTEND_DEPLOY_HOOK")
+            if [ "$response" -ge 200 ] && [ "$response" -lt 300 ]; then
+              echo "Frontend deployment triggered successfully (HTTP $response)."
+            else
+              echo "Error: Frontend deployment hook returned HTTP $response"
+              exit 1
+            fi
+          else
+            echo "::notice ::FRONTEND_DEPLOY_HOOK secret is not set. Add your Vercel, Netlify, or Render deploy hook in GitHub Repository Secrets to automate frontend deployments."
+          fi
+
