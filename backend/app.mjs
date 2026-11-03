@@ -4,6 +4,7 @@ import authRoutes from "./routes/auth.routes.mjs";
 import categoryRoutes from "./routes/category.route.mjs";
 import imageRoutes from "./routes/routes.image.mjs";
 import productRoutes from "./routes/product.route.mjs";
+import userRoutes from "./routes/route.user.mjs"
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/images", imageRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/users", userRoutes)
 app.use(errorHandler);
 
 
