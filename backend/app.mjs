@@ -6,6 +6,7 @@ import imageRoutes from "./routes/routes.image.mjs";
 import productRoutes from "./routes/product.route.mjs";
 import userRoutes from "./routes/route.user.mjs"
 import addressRoutes from "./routes/route.address.mjs"
+import inventoryRoutes from "./routes/routes.inventory.mjs"
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/images", imageRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes)
 app.use("/api/address", addressRoutes)
+app.use("/api/inventory", inventoryRoutes)
 app.use(errorHandler);
 
 
