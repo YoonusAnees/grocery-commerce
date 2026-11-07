@@ -178,3 +178,32 @@ export async function getCart(userId) {
             items.every((item) => item.available) && totals.size === 1,
     };
 }
+
+export async function removeCartItem(userId, productId) {
+    if (
+        typeof productId !== "string" || !mongoose.isObjectIdOrHexString(productId)
+    ) {
+        throw new AppError(
+            "Invalid Product ID",
+            400,
+            "VALIDATION_ERROR",
+        );
+    }
+
+    await CartItem.delete({
+        user: userId,
+        product: productId,
+    });
+
+    return { productId };
+}
+
+export async function clearCart(userId) {
+    const valiDate = await CartItem.deleteMany(
+        { user: userId },
+    );
+
+    return {
+        removedCount: valiDate.deletedCount
+    };
+}

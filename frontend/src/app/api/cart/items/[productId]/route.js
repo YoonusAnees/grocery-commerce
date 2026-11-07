@@ -51,3 +51,34 @@ export async function PUT(request, context) {
         return handleError(error);
     }
 }
+
+
+export async function DELETE(request, context) {
+    try {
+        requireOrigin(request);
+        const token = getAccessToken(request);
+        const { productId } = await context.params;
+
+        if (!/^[a-fA-F0-9]{24}$/.test(productId)) {
+            throw new ApiError(
+                "Invalid product ID",
+                400,
+                "VALIDATION_ERROR",
+            );
+        }
+
+        const result = await backendRequest(
+            `/api/v1/cart/items/${productId}`,
+            {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            },
+        );
+
+        return json(result);
+    } catch (error) {
+        return handleError(error);
+    }
+}
