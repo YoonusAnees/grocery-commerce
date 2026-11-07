@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { setQuantity, getMyCart } from "../controllers/controller.cart.mjs";
+import { setQuantity, getMyCart, remove, clear } from "../controllers/controller.cart.mjs";
 import { protect } from "../middlewares/middleware.mjs";
 
 const router = Router();
@@ -13,5 +13,7 @@ router.use((req, res, next) => {
 
 router.get("/", getMyCart);
 router.put("/items/:productId", setQuantity);
+router.delete("/items/:productId", remove),
+router.delete("/", clear)
 
 export default router;
