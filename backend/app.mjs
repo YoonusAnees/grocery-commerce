@@ -9,6 +9,7 @@ import addressRoutes from "./routes/route.address.mjs";
 import inventoryRoutes from "./routes/routes.inventory.mjs";
 import cartRoutes from "./routes/route.cart.mjs";
 import checkoutRoutes from "./routes/routes.checkout.mjs";
+import orderRoutes from "./routes/route.order.mjs";
 
 const app = express();
 
@@ -31,7 +32,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/cart", cartRoutes);
-app.use("/api/checkout",checkoutRoutes)
+app.use("/api/checkout", checkoutRoutes);
+app.use("/api/orders", orderRoutes);
 app.use(errorHandler);
 
 
