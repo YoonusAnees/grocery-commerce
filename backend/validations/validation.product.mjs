@@ -1,5 +1,5 @@
 import { z } from "zod";
-
+import mongoose from "mongoose";
 export const createProductSchema = z.object({
     name: z.string()
         .trim()
@@ -36,12 +36,15 @@ export const createProductSchema = z.object({
         .max(Number.MAX_SAFE_INTEGER)
         .default(0),
 
-    imagePublicId: z.
-        string()
+    // Accepts: "grocery/products/yetv9uwygzohpuqemlch"
+    imagePublicId: z
+        .string()
+        .trim()
         .max(255)
-        .regex(/^grocery\/products\/[a-zA-Z0-9_-]+$/,
-            "Invalid image public ID"
-        ),
+        .regex(/^grocery\/products\/[a-zA-Z0-9_-]+$/, "Invalid image public ID")
+        .optional(),
+
+    imageUrl: z.string().trim().url().optional(),
 
 }).strict();
 

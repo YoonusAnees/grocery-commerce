@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
-
+import { v2 as cloudinary } from "cloudinary";
+import { AppError } from "./AppError.mjs";
 const saltRounds = 10;
 
 export const hashPassword = (password) => {
@@ -21,6 +22,8 @@ export const verifyProductImage = async (publicId) => {
             type: "upload",
         });
     } catch (error) {
+        console.error("Cloudinary resource lookup error:", error);
+
         if (
             error.http_code === 404 ||
             error.error?.http_code === 404
@@ -39,10 +42,12 @@ export const verifyProductImage = async (publicId) => {
         );
     }
 
+    const allowedFormats = ["jpg", "jpeg", "png", "webp"];
+
     if (
-        !["jpg", "jpeg", "png", "webp"].includes(uploadedImage.format) ||
-        typeof uploadedImage.secure_url !== "string" ||
-        !uploadedImage.secure_url.startsWith("https://")
+        !allowedFormats.includes(uploadedImage?.format) ||
+        typeof uploadedImage?.secure_url !== "string" ||
+        !uploadedImage?.secure_url.startsWith("https://")
     ) {
         throw new AppError(
             "The uploaded image is not supported",

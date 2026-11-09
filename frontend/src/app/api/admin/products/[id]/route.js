@@ -20,7 +20,7 @@ export async function GET(request, context) {
         }
 
         const result = await backendRequest(
-            `/api/v1/products/admin/${id}`,
+            `/api/products/admin/${id}`,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,

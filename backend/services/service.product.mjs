@@ -1,9 +1,10 @@
+import mongoose from "mongoose";
 import { createProductSchema, listProductsSchema, updateSchema, adminListProductsSchema } from "../validations/validation.product.mjs";
 import { Product } from "../models/model.product.mjs";
 import { AppError } from "../utils/AppError.mjs";
 import { Category } from "../models/model.category.mjs";
 import { verifyProductImage } from "../utils/helper.mjs";
-import mongoose from "mongoose";
+
 
 
 function validate(schema, data) {
@@ -86,10 +87,12 @@ function toProductResponse(product) {
         currency: product.currency,
         stock: product.stock,
         isActive: product.isActive,
-        image: {
-            publicId: product.image.publicId,
-            url: product.image.url
-        },
+        image: product.uploadedImage?.url
+            ? {
+                publicId: product.uploadedImage.publicId,
+                url: product.uploadedImage.url,
+            }
+            : null,
         createdAt: product.createdAt.toISOString(),
         updatedAt: product.updatedAt.toISOString()
     };
@@ -124,17 +127,12 @@ export async function createProduct(data) {
             "CATEGORY_NOT_FOUND",
         );
     }
-    const uploadedImage = await verifyProductImage(validData.imagePublicId);
+    let uploadedImage = null;
 
-    const allowedType = ["jpeg", "png", "webp", "jpeg"];
-
-    if (!allowedType.includes(uploadedImage.format) || typeof uploadedImage.secure_url !== "string"
-        || !uploadedImage.secure_url.startsWith("https://")) {
-        throw new AppError(
-            "The uploaded image is not supported",
-            400,
-            "INVALID_IMAGE_FORMAT"
-        );
+    // 1. Only verify if imagePublicId is actually provided
+    if (validData.imagePublicId) {
+        // verifyProductImage already validates the format & HTTPS URL and returns { publicId, url }
+        uploadedImage = await verifyProductImage(validData.imagePublicId);
     }
 
     const product = await Product.create({
@@ -197,7 +195,7 @@ export async function getProductById(id) {
 
     const product = await Product.findOne({
         _id: id,
-        idActive: true,
+        isActive: true,
     });
 
     if (!product) {
@@ -257,9 +255,9 @@ export async function updateProduct(id, data) {
     }
 
     if (validDate.imagePublicId !== undefined) {
-        updates.image = await verifyProductImage(
-            validDate.imagePublicId,
-        );
+        updates.uploadedImage = validDate.imagePublicId
+            ? await verifyProductImage(validDate.imagePublicId)
+            : null;
     }
 
     const product = await Product.findByIdAndUpdate(
@@ -272,11 +270,10 @@ export async function updateProduct(id, data) {
     );
 
     if (!product) {
-        AppError(
+        throw new AppError(
             "Product Not Found",
             404,
             "PRODUCT_NOT_FOUND"
-
         );
     }
 

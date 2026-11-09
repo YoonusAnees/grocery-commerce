@@ -16,7 +16,7 @@ function productPath(id) {
         );
     }
 
-    return `/api/v1/products/${id}`;
+    return `/api/products/${id}`;
 }
 
 export async function GET(request, context) {

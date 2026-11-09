@@ -3,13 +3,14 @@ import {
     getAccessToken,
     handleError,
     json,
+    requireOrigin,
 } from "@/lib/server/backend";
 
 export async function GET(request) {
     try {
         const token = getAccessToken(request);
 
-        const result = await backendRequest("/api/v1/cart", {
+        const result = await backendRequest("/api/cart", {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -27,7 +28,7 @@ export async function DELETE(request) {
         requireOrigin(request);
         const token = getAccessToken(request);
 
-        const result = await backendRequest("/api/v1/cart", {
+        const result = await backendRequest("/api/cart", {
             method: "DELETE",
             headers: {
                 Authorization: `Bearer ${token}`,

@@ -59,7 +59,7 @@ export async function GET(request) {
         }
 
         const result = await backendRequest(
-            `/api/v1/products?${params.toString()}`,
+            `/api/products?${params.toString()}`,
         );
 
         return json(result);

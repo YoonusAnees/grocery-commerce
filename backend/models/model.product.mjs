@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { boolean } from "zod";
+
 
 const productSchema = new mongoose.Schema({
 
@@ -10,7 +10,7 @@ const productSchema = new mongoose.Schema({
         maxlength: 120
     },
 
-    descriptoin: {
+    description: {
         type: String,
         trim: true,
         maxlength: 2000,
@@ -51,19 +51,14 @@ const productSchema = new mongoose.Schema({
         default: 0
     },
 
-    image: {
-        publicId: {
-            type: String,
-            required: true,
-        },
-        url: {
-            type: String,
-            required: true
-        }
+    uploadedImage: {
+        publicId: { type: String },
+        url: { type: String },
+        _id: false,
     },
 
     isActive: {
-        type: boolean,
+        type: Boolean,
         default: true,
         required: true
 

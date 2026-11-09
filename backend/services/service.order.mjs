@@ -9,7 +9,7 @@ async function releaseReservation(filter, status, actorId) {
         const order = await Order.findOneAndUpdate(
             { ...filter, status: "pending_payment" },
             { $set: { status } },
-            { new: true, session },
+            { returnDocument: 'after', session },
         );
         if (!order) return null;
         const movements = [];
@@ -18,7 +18,7 @@ async function releaseReservation(filter, status, actorId) {
             const product = await Product.findByIdAndUpdate(
                 item.product,
                 { $inc: { stock: item.quantity } },
-                { new: true, session }
+                { returnDocument: 'after', session }
             );
 
             if (!product) {
@@ -30,7 +30,7 @@ async function releaseReservation(filter, status, actorId) {
             }
             movements.push({
                 product: product.id,
-                changedBy: actorId ?? order.user,
+                changeBy: actorId ?? order.user,
                 change: item.quantity,
                 before: product.stock - item.quantity,
                 after: product.stock,

@@ -9,7 +9,7 @@ export async function setQuantity(req, res, next) {
         );
         return res.status(200).json({
             success: true,
-            messahe: "Cart Quantity Updated",
+            message: "Cart Quantity Updated",
             data,
         })
     } catch (error) {
@@ -31,7 +31,7 @@ export async function getMyCart(req, res, next) {
 
 export async function remove(req, res, next) {
     try {
-        const data = await removeCartItem(req.user.id, req, params.productId);
+        const data = await removeCartItem(req.user.id,req.params.productId,);
         return res.status(200).json({
             success: true,
             message: "Item Removed From Cart",

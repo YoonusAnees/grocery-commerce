@@ -16,7 +16,7 @@ function addressPath(id) {
         );
     }
 
-    return `/api/v1/addresses/${id}`;
+    return `/api/address/${id}`;
 }
 
 export async function PUT(request, context) {

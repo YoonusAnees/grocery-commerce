@@ -2,7 +2,7 @@ import { quantitySchema } from "../validations/validation.cart.item.mjs";
 import { AppError } from "../utils/AppError.mjs";
 import { CartItem } from "../models/model.cart.item.mjs";
 import { Product } from "../models/model.product.mjs";
-import { mongoose } from "mongoose";
+import mongoose from "mongoose";
 
 
 export async function setCartQunatity(userId, productId, data) {
@@ -18,7 +18,7 @@ export async function setCartQunatity(userId, productId, data) {
 
     if (!validData.success) {
         throw new AppError(
-            result.error.issues[0].message,
+            validData.error.issues[0].message,
             400,
             "VALIDATION_ERROR"
         );
@@ -53,15 +53,20 @@ export async function setCartQunatity(userId, productId, data) {
     };
 
     try {
-        await CartItem.findOneAndUpdate(
+        const item = await CartItem.findOneAndUpdate(
             filter,
             { $set: { quantity } },
             {
                 upsert: true,
-                new: true,
+                returnDocument: "after",
                 runValidators: true
             },
         );
+
+        return {
+            productId,
+            quantity: item.quantity
+        };
 
     } catch (error) {
 
@@ -77,7 +82,7 @@ export async function setCartQunatity(userId, productId, data) {
             filter,
             { $set: { quantity } },
             {
-                new: true,
+                returnDocument: "after",
                 runValidators: true
             },
         );
@@ -102,46 +107,49 @@ export async function setCartQunatity(userId, productId, data) {
 }
 
 export async function getCart(userId) {
-    const cartItem = await CartItem.find({ user: userId })
+    const cartItems = await CartItem.find({ user: userId })
         .sort({ createdAt: 1, _id: 1 })
         .lean();
 
+    
+    const productIds = cartItems.map((item) => item.product);
+
     const products = await Product.find({
-        _id: { $in: cartItem.map((item) => item.products) },
+        _id: { $in: productIds },
     }).lean();
 
     const productMap = new Map(
-        products.map((product) => [
-            String(product._id),
-            product,
-        ]),
+        products.map((p) => [String(p._id), p])
     );
 
     const totals = new Map();
 
-    const items = cartItem.map((item) => {
+    const items = cartItems.map((item) => {
         const productId = String(item.product);
         const product = productMap.get(productId);
 
         if (!product || !product.isActive) {
             return {
                 productId,
+                name: product?.name ?? "Unavailable Product",
+                imageUrl: product?.uploadedImage?.url ?? null,
                 quantity: item.quantity,
+                priceMinor: product?.priceMinor ?? 0,
+                currency: product?.currency ?? "LKR",
+                subtotalMinor: 0,
+                availableStock: 0,
                 available: false,
                 issue: "PRODUCT_UNAVAILABLE",
-                subtotalMinor: null
             };
-
         }
 
         const subtotalMinor = product.priceMinor * item.quantity;
         const currentTotal = totals.get(product.currency) ?? 0;
         const nextTotal = currentTotal + subtotalMinor;
 
-        if (
-            !Number.isSafeInteger(subtotalMinor) || !Number.isSafeInteger(nextTotal)) {
+        if (!Number.isSafeInteger(subtotalMinor) || !Number.isSafeInteger(nextTotal)) {
             throw new AppError(
-                "Cart amount ecxeeds the supported limits",
+                "Cart amount exceeds the supported limits",
                 409,
                 "CART_AMOUNT_TOO_LARGE"
             );
@@ -153,16 +161,15 @@ export async function getCart(userId) {
         return {
             productId,
             name: product.name,
-            imageUrl: product.imageUrl,
+            imageUrl: product.uploadedImage?.url ?? null, // 2. Fixed: points to uploadedImage.url
             quantity: item.quantity,
             priceMinor: product.priceMinor,
             currency: product.currency,
             subtotalMinor,
             availableStock: product.stock,
             available,
-            issue: available ? null : "INSUFFICIENT_STOCK"
+            issue: available ? null : "INSUFFICIENT_STOCK",
         };
-
     });
 
     return {
@@ -170,12 +177,11 @@ export async function getCart(userId) {
         totalsByCurrency: [...totals].map(([currency, subtotalMinor]) => ({
             currency,
             subtotalMinor,
-        }),
-        ),
-
+        })),
         canCheckout:
             items.length > 0 &&
-            items.every((item) => item.available) && totals.size === 1,
+            items.every((item) => item.available) &&
+            totals.size === 1,
     };
 }
 
@@ -190,7 +196,7 @@ export async function removeCartItem(userId, productId) {
         );
     }
 
-    await CartItem.delete({
+    await CartItem.deleteOne({
         user: userId,
         product: productId,
     });

@@ -1,8 +1,8 @@
-import mongoose  from "mongoose";
-
+import mongoose from "mongoose";
+const id = mongoose.Schema.Types.ObjectId
 const addressSchema = new mongoose.Schema({
     user: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: id,
         ref: "User",
         required: true,
         index: true

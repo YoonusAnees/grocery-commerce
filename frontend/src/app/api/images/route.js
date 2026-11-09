@@ -52,7 +52,7 @@ export async function POST(request) {
 
         upload.set("image", image);
 
-        const result = await backendRequest("/api/v1/images", {
+        const result = await backendRequest("/api/images", {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${accessToken}`,

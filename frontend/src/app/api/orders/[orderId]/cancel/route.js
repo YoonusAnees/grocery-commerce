@@ -18,7 +18,7 @@ export async function POST(request, context) {
         }
 
         const result = await backendRequest(
-            `/api/v1/orders/${orderId}/cancel`,
+            `/api/orders/${orderId}/cancel`,
             {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` },

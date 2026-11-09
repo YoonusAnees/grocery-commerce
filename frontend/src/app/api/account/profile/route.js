@@ -11,7 +11,7 @@ export async function GET(request) {
     try {
         const accessToken = getAccessToken(request);
 
-        const result = await backendRequest("/api/v1/users/me", {
+        const result = await backendRequest("/api/users/me", {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
             },
@@ -41,7 +41,7 @@ export async function PATCH(request) {
             );
         }
 
-        const result = await backendRequest("/api/v1/users/me", {
+        const result = await backendRequest("/api/users/me", {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",

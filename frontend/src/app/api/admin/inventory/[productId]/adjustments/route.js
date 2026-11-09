@@ -16,7 +16,7 @@ function inventoryPath(productId) {
         );
     }
 
-    return `/api/v1/inventory/${productId}/adjustments`;
+    return `/api/inventory/${productId}/adjustments`;
 }
 
 export async function GET(request, context) {

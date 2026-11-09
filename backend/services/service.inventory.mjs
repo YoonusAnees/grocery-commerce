@@ -1,4 +1,4 @@
-import { mongoose } from "mongoose";
+import mongoose from "mongoose";
 import { Product } from "../models/model.product.mjs";
 import { StockMovement } from "../models/model.stockMovement.mjs";
 import { AppError } from "../utils/AppError.mjs";
@@ -20,7 +20,7 @@ function toMovementResponse(movement) {
     return {
         id: movement.id,
         product: String(movement.product),
-        changedBy: String(movement.changedBy),
+        changeBy: String(movement.changeBy),
         change: movement.change,
         before: movement.before,
         after: movement.after,
@@ -33,7 +33,7 @@ export async function adjustStock(productId, userId, data) {
     validateProductId(productId);
     const validData = adjustmentSchema.safeParse(data);
 
-    if (!result.success) {
+    if (!validData.success) {
         throw new AppError(
             validData.error.issues[0].message,
             400,
@@ -74,7 +74,7 @@ export async function adjustStock(productId, userId, data) {
             [
                 {
                     product: productId,
-                    changedBy: userId,
+                    changeBy: userId,
                     change,
                     before,
                     after,

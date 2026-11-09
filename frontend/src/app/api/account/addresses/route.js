@@ -11,7 +11,7 @@ export async function GET(request) {
     try {
         const token = getAccessToken(request);
 
-        const result = await backendRequest("/api/v1/addresses", {
+        const result = await backendRequest("/api/address", {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -41,7 +41,7 @@ export async function POST(request) {
             );
         }
 
-        const result = await backendRequest("/api/v1/addresses", {
+        const result = await backendRequest("/api/address", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

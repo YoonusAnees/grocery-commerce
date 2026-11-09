@@ -30,10 +30,23 @@ app.use("/api/images", imageRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/address", addressRoutes);
+app.use("/api/addresses", addressRoutes);
+app.use("/api/account/addresses", addressRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/orders", orderRoutes);
+
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        error: {
+            message: `Route ${req.method} ${req.originalUrl} not found`,
+            code: "ROUTE_NOT_FOUND",
+        },
+    });
+});
+
 app.use(errorHandler);
 
 

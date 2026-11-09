@@ -49,7 +49,7 @@ export async function checkout(userId, body) {
     }
     const data = valiData.data;
     console.log(data);
-    
+
     const orderFilter = { user: userId, checkoutKey: data.checkoutKey };
 
     try {
@@ -94,10 +94,10 @@ export async function checkout(userId, body) {
             for (const entry of cart) {
                 const product = await Product.findOneAndUpdate({
                     _id: entry.product,
-                    isAcitve: true,
+                    isActive: true,
                     stock: { $gte: entry.quantity },
                 }, { $inc: { stock: -entry.quantity } },
-                    { new: true, session },);
+                    { returnDocument: 'after', session },);
 
                 if (!product) {
                     throw new AppError(
@@ -134,7 +134,7 @@ export async function checkout(userId, body) {
 
                 movements.push({
                     product: product._id,
-                    changedBy: userId,
+                    changeBy: userId,
                     change: -entry.quantity,
                     before: product.stock + entry.quantity,
                     after: product.stock,
@@ -152,7 +152,7 @@ export async function checkout(userId, body) {
 
             const [order] = await Order.create([{
                 ...orderFilter,
-                addressId: data.address,
+                addressId: data.addressId,
                 deliveryAddress: address,
                 items,
                 currency,

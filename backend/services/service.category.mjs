@@ -48,12 +48,13 @@ export async function createCategory(data) {
 
 export async function getCategories() {
     const categories = await Category.find()
-        .select("_id name createdAt")
+        .select("_id name namekey createdAt")
         .sort({ name: 1 });
 
     return categories.map((category) => ({
         id: category.id,
         name: category.name,
+        namekey: category.namekey,
         createdAt: category.createdAt,
     }));
 }

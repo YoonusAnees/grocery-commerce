@@ -46,22 +46,27 @@ export function handleError(error) {
 }
 
 export function requireOrigin(request) {
-    const origin = process.env.APP_ORIGIN;
+    const requestOrigin = request.headers.get("origin");
 
-    if (!origin) {
-        throw new ApiError(
-            "Application origin is not configured",
-            500,
-            "CONFIGURATION_ERROR",
-        );
-    }
+    if (requestOrigin) {
+        const configuredOrigin = process.env.APP_ORIGIN;
+        const host = request.headers.get("host");
+        const allowedOrigins = [
+            configuredOrigin,
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://192.168.1.107:3000",
+            host ? `http://${host}` : null,
+            host ? `https://${host}` : null,
+        ].filter(Boolean);
 
-    if (request.headers.get("origin") !== origin) {
-        throw new ApiError(
-            "Request origin is not allowed",
-            403,
-            "FORBIDDEN_ORIGIN",
-        );
+        if (!allowedOrigins.includes(requestOrigin)) {
+            throw new ApiError(
+                "Request origin is not allowed",
+                403,
+                "FORBIDDEN_ORIGIN",
+            );
+        }
     }
 }
 
