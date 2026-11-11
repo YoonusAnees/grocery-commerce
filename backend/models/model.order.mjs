@@ -62,6 +62,11 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    payableMinor: {
+        type: Number,
+        min: 0,
+        validate: Number.isSafeInteger,
+    },
     status: {
         type: String,
         enum: ["pending_payment", "paid", "cancelled", "expired"],

@@ -39,9 +39,9 @@ async function startServer() {
             process.exit(1);
         });
 
-        void runExpiry();
-        const expiryTimer = setInterval(() => void runExpiry(), 30_000);
-        expiryTimer.unref();
+        // void runExpiry();
+        // const expiryTimer = setInterval(() => void runExpiry(), 30_000);
+        // expiryTimer.unref();
 
     } catch (error) {
         console.error("Startup failed:", error.message);
