@@ -60,7 +60,7 @@ export async function updateMyProfile(userId, data) {
         throw new AppError(
             "Account no longer Exists",
             401,
-            "ACCOUNT_NOT_FOUNDED"
+            "ACCOUNT_NOT_FOUND"
         );
     }
 
